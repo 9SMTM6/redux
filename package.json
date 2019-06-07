@@ -20,7 +20,7 @@
     "elm"
   ],
   "authors": [
-    "Dan Abramov <samuel.maier@iteratec.com> (https://github.com/9SMTM6)"
+    "Samuel Maier <samuel.maier@iteratec.com> (https://github.com/9SMTM6)"
   ],
   "main": "lib/redux.js",
   "unpkg": "dist/redux.js",

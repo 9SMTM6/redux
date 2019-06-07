@@ -1,12 +1,90 @@
-# A variant of redux allowing opt-out of the ban on sideeffects in the reducer
+# A fork of redux allowing opt-out of the ban on sideeffects in the reducer
 
-Have you also had errors come up once upgrading redux to 4.0, that you cant use `getState`, `dispatch` or `subscribe /unsubscribe` in the reducer? Its a complete antipattern indeed, but as it turns out theres at least currently no technical reason to forbid that usage. It might break some middleware now or in the future, but theres nothing speaking against continuing to allow this usage as opt-in with heavy warnings, as lots of legacy codebases, the one I came into a few months ago unfortunately included, rely on these antipatterns. And the build-in resources from redux, like combineReducers, dont allow for in-pattern usage of global redux-state in your small reducers.
+Have you also had errors come up once upgrading redux to 4.0, that you cant use `getState`, `dispatch` or `subscribe /unsubscribe` in the reducer?
 
-So I put in the work to design a way to opt-out of this ban with out breaking anything and minimal exclusion of future expansion of the API of createStore, to document these changes, write the tests, and make a merge-request. In said merge-request I also said that I could work on adding the global State as 3rd parameter of reducers in combineReducers. This was THE SUGGESTEWD WAY to use global state in reducers in the commit that banned the usage of getState, and it doesnt neccesarily lead to a large interwoven state thats hard to understand, limiting the potantial influencers from the global state to that of single reducers is as easy as using object destructuring in the parameter of the reducer, or extracting the state you need and then not using the global state anymore. But as it turns out the maintainers are interested neither in my current merge-request nor supporting in-pattern usage of global state in the reducers.
+Its a complete antipattern indeed, but as it turns out theres at least currently no technical reason to forbid that usage.
 
-I might not have been the calmest person in the discussion, but they gave barely any argmuents for their complete dismissal of the possibility to allow continued guarded access to an antipattern they never actively warned against in the past, thats only needed because of their stubborn dismissal of expanding the functionality of their code. I guess theres a reason that Vuex is far superior to Redux, but as I'm stuck with redux and already put in the work I though that maybe someone else would be interested in my modification and will publish this on NPM. I can only say to any person still deciding on a state management, choose vuex. I have no experience with it, but with react-vuex theres a way to use Vuex with React simularly to react-redux. The disadvantage of that is that you have to include Vue in addition to React and Vuex - unless you switch to Vue -, but Vue comes with a decently small codebasis on its own.
+It might break some middleware now or in the future, but theres nothing speaking against continuing to allow this usage as opt-in with heavy warnings, as lots of legacy codebases, the one I came into a few months ago unfortunately included, rely on these antipatterns. 
 
-This redux-variant is meant for those stuck with redux like me. If noone else is interested it'll at least ease access to this code in my project, if there is I'd love some support in keeping this code-basis up to date with changes in redux.
+And the build-in resources from redux, like combineReducers, dont allow for in-pattern usage of global redux-state in your small reducers.
+
+So I put in the work to design a way to opt-out of this ban with out breaking anything and minimal exclusion of future expansion of the API of createStore, to document these changes, write the tests, and make a merge-request.
+
+In said merge-request I also said that I could work on adding the global State as 3rd parameter of reducers in combineReducers. 
+
+This was THE SUGGESTED WAY to use global state in reducers in the VERY commit that banned the usage of getState, and it doesnt neccesarily lead to a large interwoven state thats hard to understand. Limiting the potential influencers from the global state to that of single reducers is as easy as using object destructuring in the parameter of the reducer, or extracting the state you need and then not using the global state anymore. But as it turns out the maintainers were interested neither in my merge-request nor supporting in-pattern usage of global state in the reducers by adding a 3rd parameter to combineReducers.
+
+I might not have been the calmest person in the discussion, but they gave barely any argmuents for their complete dismissal of the possibility to allow continued guarded access to an antipattern they never actively warned against, i.e. by console.warn-ing, in the past. Said antipattern is only ever used because of their stubborn dismissal of expanding the functionality of their code like in the combineReducer case. I guess theres a reason that Vuex is far superior to Redux, but as I'm stuck with redux and already put in the work I though that maybe someone else would be interested in my modification and decided to publish this on NPM.
+
+I can only say to any person still deciding on a state management, choose vuex. I have no experience with that package, but [react-vuex](https://www.npmjs.com/package/react-vuex) promises a way to use Vuex with React simularly to redux with react-redux. The disadvantage of that is that you have to include Vue in addition to React and Vuex - unless you switch to Vue -, but Vue comes with a decently small codebasis on its own.
+
+This redux-fork is meant for those stuck with redux like me but wanting to use newer features. If noone else is interested it'll at least ease access to this code in my project, if there is I'd love some support in keeping this code-basis up to date with changes in redux.
+
+## The API of the modified createStore:
+
+### `createStore(reducer, [preloadedState], [enhancer])`
+
+Creates a Redux [store](Store.md) that holds the complete state tree of your app.  
+There should only be a single store in your app.
+
+#### Arguments
+
+1. `reducer` _(Function)_: A [reducing function](../Glossary.md#reducer) that returns the next [state tree](../Glossary.md#state), given the current state tree and an [action](../Glossary.md#action) to handle.
+
+2. [`preloadedState`] _(any)_: The initial state. You may optionally specify it to hydrate the state from the server in universal apps, or to restore a previously serialized user session. If you produced `reducer` with [`combineReducers`](combineReducers.md), this must be a plain object with the same shape as the keys passed to it. Otherwise, you are free to pass anything that your `reducer` can understand.
+
+3. [`enhancer`] _(Function)_: The store enhancer. You may optionally specify it to enhance the store with third-party capabilities such as middleware, time travel, persistence, etc. The only store enhancer that ships with Redux is [`applyMiddleware()`](./applyMiddleware.md).
+
+4. ['options'] _(object)_: Optional object with further configuration of redux. Currently allows for opt out of the ban on getState, dispatch and subscriptionhandling in the reducer via the boolean parameters `rules.allowDispatch`, `rules.allowGetState` and `rules.allowSubscriptionHandling`. Keep in mind though that this ban is there for a reason, and this opt-out is meant for compatibility with legacy-code. Using these functions in the reducer is an antipattern that makes the reducer impure, and support for this might be removed in the future.
+
+#### Returns
+
+([_`Store`_](Store.md)): An object that holds the complete state of your app. The only way to change its state is by [dispatching actions](Store.md#dispatch). You may also [subscribe](Store.md#subscribe) to the changes to its state to update the UI.
+
+#### Example
+
+```js
+import { createStore } from 'redux'
+
+function todos(state = [], action) {
+  switch (action.type) {
+    case 'ADD_TODO':
+      return state.concat([action.text])
+    default:
+      return state
+  }
+}
+
+const store = createStore(todos, ['Use Redux'])
+
+store.dispatch({
+  type: 'ADD_TODO',
+  text: 'Read the docs'
+})
+
+console.log(store.getState())
+// [ 'Use Redux', 'Read the docs' ]
+```
+
+#### Tips
+
+- Don't create more than one store in an application! Instead, use [`combineReducers`](combineReducers.md) to create a single root reducer out of many.
+
+- It is up to you to choose the state format. You can use plain objects or something like [Immutable](http://facebook.github.io/immutable-js/). If you're not sure, start with plain objects.
+
+- If your state is a plain object, make sure you never mutate it! For example, instead of returning something like `Object.assign(state, newData)` from your reducers, return `Object.assign({}, state, newData)`. This way you don't override the previous `state`. You can also write `return { ...state, ...newData }` if you enable the [object spread operator proposal](../recipes/UsingObjectSpreadOperator.md).
+
+- For universal apps that run on the server, create a store instance with every request so that they are isolated. Dispatch a few data fetching actions to a store instance and wait for them to complete before rendering the app on the server.
+
+- When a store is created, Redux dispatches a dummy action to your reducer to populate the store with the initial state. You are not meant to handle the dummy action directly. Just remember that your reducer should return some kind of initial state if the state given to it as the first argument is `undefined`, and you're all set.
+
+- To apply multiple store enhancers, you may use [`compose()`](./compose.md).
+
+### Other notes
+
+Typescripy typing for the extended createReducer is of course provided.
+
+I might add the global state as 3rd optional argument to reducers combined with createReducer in this package.
 
 # <a href='http://redux.js.org'><img src='https://camo.githubusercontent.com/f28b5bc7822f1b7bb28a96d8d09e7d79169248fc/687474703a2f2f692e696d6775722e636f6d2f4a65567164514d2e706e67' height='60' alt='Redux Logo' aria-label='redux.js.org' /></a>
 
