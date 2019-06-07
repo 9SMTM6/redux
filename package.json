@@ -1,11 +1,11 @@
 {
-  "name": "redux",
-  "version": "4.0.1",
+  "name": "free-redux",
+  "version": "0.0.1",
   "description": "Predictable state container for JavaScript apps",
   "license": "MIT",
-  "homepage": "http://redux.js.org",
-  "repository": "github:reduxjs/redux",
-  "bugs": "https://github.com/reduxjs/redux/issues",
+  "homepage": "https://github.com/9smtm6/redux/",
+  "repository": "github:9smtm6/redux",
+  "bugs": "https://github.com/9smtm6/redux/issues",
   "keywords": [
     "redux",
     "reducer",
@@ -20,8 +20,7 @@
     "elm"
   ],
   "authors": [
-    "Dan Abramov <dan.abramov@me.com> (https://github.com/gaearon)",
-    "Andrew Clark <acdlite@me.com> (https://github.com/acdlite)"
+    "Dan Abramov <samuel.maier@iteratec.com> (https://github.com/9SMTM6)"
   ],
   "main": "lib/redux.js",
   "unpkg": "dist/redux.js",
@@ -84,7 +83,7 @@
     "typescript": "^3.4.4",
     "typings-tester": "^0.3.2"
   },
-  "npmName": "redux",
+  "npmName": "free-redux",
   "npmFileMap": [
     {
       "basePath": "/dist/",
