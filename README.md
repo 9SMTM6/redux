@@ -22,7 +22,7 @@ This redux-fork is meant for those stuck with redux like me but wanting to use n
 
 ## The API of the modified createStore:
 
-### `createStore(reducer, [preloadedState], [enhancer])`
+# `createStore(reducer, [preloadedState], [enhancer])`
 
 Creates a Redux [store](Store.md) that holds the complete state tree of your app.  
 There should only be a single store in your app.
@@ -35,7 +35,7 @@ There should only be a single store in your app.
 
 3. [`enhancer`] _(Function)_: The store enhancer. You may optionally specify it to enhance the store with third-party capabilities such as middleware, time travel, persistence, etc. The only store enhancer that ships with Redux is [`applyMiddleware()`](./applyMiddleware.md).
 
-4. ['options'] _(object)_: Optional object with further configuration of redux. Currently allows for opt out of the ban on getState, dispatch and subscriptionhandling in the reducer via the boolean parameters `rules.allowDispatch`, `rules.allowGetState` and `rules.allowSubscriptionHandling`. Keep in mind though that this ban is there for a reason, and this opt-out is meant for compatibility with legacy-code. Using these functions in the reducer is an antipattern that makes the reducer impure, and support for this might be removed in the future.
+4. [`options`] _(object)_: Optional object with further configuration of redux. Currently allows for opt out of the ban on getState, dispatch and subscriptionhandling in the reducer via the boolean parameters `rules.allowDispatch`, `rules.allowGetState` and `rules.allowSubscriptionHandling`. Keep in mind though that this ban is there for a reason, and this opt-out is meant for compatibility with legacy-code. Using these functions in the reducer is an antipattern that makes the reducer impure, and support for this might be removed in the future.
 
 #### Returns
 
@@ -44,26 +44,38 @@ There should only be a single store in your app.
 #### Example
 
 ```js
-import { createStore } from 'redux'
+import { createStore, applyMiddleware } from 'redux'
+import thunkMiddleware from 'redux-thunk';
 
-function todos(state = [], action) {
+const todos = (state = [], action) => {
   switch (action.type) {
     case 'ADD_TODO':
-      return state.concat([action.text])
+      store.getState();
+      return state.concat([action.text]);
     default:
       return state
   }
 }
 
-const store = createStore(todos, ['Use Redux'])
+// needs `undefined` or a function -store enhancer aka middleware like redux-thunk - bevor it to distinguish between the initialState and the options object
+const store = createStore(todos, ['Better use Vue'], undefined, {rules: { allowGetState: true } })
+
+// so this works too:
+const store2 = createStore(todos, ['Better use Vue'], applyMiddleware(thunkMiddleware), {rules: { allowDispatch: true } })
+
+// and this: 
+const store3 = createStore(todos, applyMiddleware(thunkMiddleware), {rules: { allowSubscriptionHandling: true } })
+
+// and this:
+const store4 = createStore(todos, undefined, {rules: { allowGetState: true } })
 
 store.dispatch({
   type: 'ADD_TODO',
-  text: 'Read the docs'
+  text: ' in the future'
 })
 
 console.log(store.getState())
-// [ 'Use Redux', 'Read the docs' ]
+// [ 'Better use Vue', ' in the future' ]
 ```
 
 #### Tips
